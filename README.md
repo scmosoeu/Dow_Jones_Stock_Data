@@ -1,4 +1,5 @@
-# Dow_Jones_Stock_Data
-Stock data analysis
+Dow Jones Stock Data
 
-Looking at the correlations between the dow jones stock market data
+Dashboard has the following tabs with the respective contents:
+
+Overview: Shows when the current Dow Jones stocks joined the index
