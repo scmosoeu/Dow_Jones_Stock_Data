@@ -24,5 +24,16 @@ body, html {
 }
 
 .my_graphs {
+  font-size: 18;
+}
+
+.split_graph {
+  font-size: 20;
+  font-weight: bold;
+}
+
+.dropmenu {
   font-size: 16;
+  font-weight: bold;
+  width: 500px;
 }

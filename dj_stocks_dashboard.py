@@ -35,11 +35,12 @@ app.layout = html.Div([
     html.Div(id='tab-content')
 ])
 
+#########################_____Overview Tab______##################################################################################
+
 overview = html.Div([
     html.Div([
         html.Div([
             dcc.Graph(
-                id='date_joined',
                 figure={
                     'data': [
                         go.Scatter(
@@ -53,17 +54,111 @@ overview = html.Div([
                     ],
                     'layout': go.Layout(
                         hovermode='closest',
-                        title='Year stock joined Dow Jones',
+                        title='Year stock joined Dow Jones Index',
                         xaxis={'title':'Year'},
-                        yaxis={'visible':False}
+                        yaxis={'visible':False},
+                        height=500
                     )
                 },
                 className='my_graphs'
             )
         ]),
-        html.Div()
+        html.Div([
+            dcc.Graph(
+                figure={
+                    'data': [
+                        go.Bar(
+                            x=stock_names['stock_market'].value_counts(),
+                            y=stock_names['stock_market'].value_counts().index,
+                            orientation='h',
+                            marker={'color':'rgba(250,70,120,0.7)'}
+                        )
+                    ],
+                    'layout': go.Layout(
+                        hovermode='closest',
+                        title='Number of Dow Jones stocks in each market',
+                        height=330
+                    )
+                }
+            )
+        ],className='split_graph')
     ])
 ])
+
+######################____Dow Jones Stocks Tab______#########################################
+
+stock_names.set_index('ticker',inplace=True)
+options = []
+for tic in stock_names.index:
+    options.append({'label':'{} {}'.format(tic,stock_names.loc[tic]['name']),'value':tic})
+
+stocks = html.Div([
+    html.Div([
+        dcc.Dropdown(
+            id='tickers',
+            options=options,
+            value='AAPL',
+            className='dropmenu'
+        )
+    ]),
+    html.Div([
+        html.Div(id='line-graph',className='line_graph')
+    ])
+])
+
+@app.callback(Output('line-graph','children'),
+             [Input('tickers','value')]
+)
+
+def first_graph(ticker):
+
+    df = pd.read_csv('stocks/'+str(ticker)+'.csv')
+    data = [
+        go.Scatter(
+            x=df['date'],
+            y=df['close'],
+            mode='lines',
+            name='closing price'
+        ),
+        go.Scatter(
+            x=df['date'],
+            y=df['close'].rolling(23).mean(),
+            mode='lines',
+            name='1 month MA'
+        ),
+        go.Scatter(
+            x=df['date'],
+            y=df['close'].rolling(138).mean(),
+            mode='lines',
+            name='6 months MA'
+        )
+    ]
+
+    layout = go.Layout(
+        hovermode='closest',
+        title='{}'.format(stock_names.loc[ticker]['name']),
+        yaxis={'title':'share price (USD)'},
+        xaxis={
+            'title':'Date',
+            'rangeslider':{'visible':True}
+        },
+        legend=dict(x=0.9,y=1.1),
+        height=800
+    )
+
+    return dcc.Graph(
+        figure={
+            'data':data,
+            'layout':layout
+        }
+    )
+
+
+#######################_____Stock Performance Tab_____###########################################
+#performance = html.Div([])
+
+#######################_____Correlations Tab_____#################################################
+#correlate = html.Div([])
 
 @app.callback(Output('tab-content','children'),
              [Input('tabs','value')]
@@ -73,6 +168,12 @@ def display_content(selected_tab):
 
     if selected_tab == 'history':
         return overview
+    elif selected_tab == 'dow_jones':
+        return stocks
+    elif selected_tab == 'perform':
+        return performance
+    else:
+        return correlate
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server()
