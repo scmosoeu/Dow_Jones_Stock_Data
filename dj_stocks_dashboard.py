@@ -226,6 +226,8 @@ correlate = dcc.Graph(
         ],
         'layout':go.Layout(
             title='Correlation amongst Dow Jones stocks',
+            xaxis={'tickangle':-20},
+            yaxis={'visible':False}
         )
     },
     className='heat-map'
