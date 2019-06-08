@@ -27,7 +27,7 @@ app.layout = html.Div([
         className='tab',selected_className='tab-selected'),
         dcc.Tab(label='Dow Jones Stocks',value='dow_jones',
         className='tab',selected_className='tab-selected'),
-        dcc.Tab(label='Stock Performance',value='perform',
+        dcc.Tab(label='Stocks Performance',value='perform',
         className='tab',selected_className='tab-selected'),
         dcc.Tab(label='Correlations',value='correlations',
         className='tab',selected_className='tab-selected')
@@ -77,7 +77,10 @@ overview = html.Div([
                     'layout': go.Layout(
                         hovermode='closest',
                         title='Number of Dow Jones stocks in each market',
-                        height=330
+                        height=330,
+                        plot_bgcolor='#111',
+                        paper_bgcolor='#111',
+                        font={'color':'#7FDBFF'}
                     )
                 }
             )
@@ -155,10 +158,57 @@ def first_graph(ticker):
 
 
 #######################_____Stock Performance Tab_____###########################################
-#performance = html.Div([])
+
+performance_trace = []
+for equity in stock_list:
+    df = pd.read_csv('stocks/'+str(equity))
+    df['base_returns'] = df['close']/df['close'].iloc[0]
+
+    traces = go.Scatter(
+        x=df['date'],
+        y=df['base_returns'],
+        mode='lines',
+        name=stock_names.loc[str(equity).split('.')[0]]['name']
+    )
+
+    performance_trace.append(traces)
+
+    perfomance_layout = go.Layout(
+        title='Dow Jones Stocks Performance',
+        xaxis={'title':'date'},
+        yaxis={'title':'Base returns'},
+        height=800
+    )
+
+performance = html.Div([
+    dcc.Graph(
+        figure={
+            'data':performance_trace,
+            'layout':perfomance_layout,
+        }
+    )
+],className='line_graph')
 
 #######################_____Correlations Tab_____#################################################
-#correlate = html.Div([])
+
+# For Correlations, removed DowDuPonty (DWDP) because it doesn't have the same start Date
+# as all the other stocks
+
+ticker_names = [] # Create a list of stock names to be used in a DataFrame
+for i, equity in enumerate(stock_list):
+    df = pd.read_csv('stocks/'+str(equity),index_col=0)
+    ticker_names = stock_names.loc[str(equity).split('.')[0]]['name']
+    if i == 0:
+        new_df = df['changePercent']
+    elif i != 0 and equity != 'DWDP.csv':
+        other_df = df['changePercent']
+        new_df = new_df.join(other_df)
+
+print(new_df,head())
+
+correlate = html.Div([
+
+])
 
 @app.callback(Output('tab-content','children'),
              [Input('tabs','value')]
@@ -176,4 +226,4 @@ def display_content(selected_tab):
         return correlate
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)
