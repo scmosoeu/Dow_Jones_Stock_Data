@@ -1,6 +1,5 @@
 # DASH IMPORTS
 import dash
-import dash_daq as dq
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input,Output
@@ -44,19 +43,33 @@ overview = html.Div([
                 figure={
                     'data': [
                         go.Scatter(
-                            x=stock_names['year_added'],
-                            mode='markers + text',
-                            text=stock_names['name'],
-                            textposition='top center',
+                            x=stock_names[stock_names['stock_market']=='NYSE']['year_added'],
+                            mode='text',
+                            text=stock_names[stock_names['stock_market']=='NYSE']['name'],
                             hoverinfo='x',
-                            marker={'size':10}
-                        )
-                    ],
+                            marker={'color':'blue'},
+                            textfont={'color':'blue','size':15},
+                            name='NYSE'
+                        ),
+                        go.Scatter(
+                            x=stock_names[stock_names['stock_market']=='NASDAQ']['year_added'],
+                            mode='text',
+                            text=stock_names[stock_names['stock_market']=='NASDAQ']['name'],
+                            hoverinfo='x',
+                            marker={'color':'red'},
+                            textfont={'color':'red','size':15},
+                            name='NASDAQ'
+                    )],
                     'layout': go.Layout(
                         hovermode='closest',
                         title='Year stock joined Dow Jones Index',
                         xaxis={'title':'Year'},
                         yaxis={'visible':False},
+                        legend=dict(
+                            x=0.95,
+                            y=1.2,
+                            font=dict(size=15)
+                        ),
                         height=500
                     )
                 },
@@ -180,35 +193,43 @@ for equity in stock_list:
         height=800
     )
 
-performance = html.Div([
-    dcc.Graph(
-        figure={
-            'data':performance_trace,
-            'layout':perfomance_layout,
-        }
-    )
-],className='line_graph')
+performance = dcc.Graph(
+    figure={
+        'data':performance_trace,
+        'layout':perfomance_layout,
+    }
+)
 
 #######################_____Correlations Tab_____#################################################
-
-# For Correlations, removed DowDuPonty (DWDP) because it doesn't have the same start Date
-# as all the other stocks
 
 ticker_names = [] # Create a list of stock names to be used in a DataFrame
 for i, equity in enumerate(stock_list):
     df = pd.read_csv('stocks/'+str(equity),index_col=0)
-    ticker_names = stock_names.loc[str(equity).split('.')[0]]['name']
+    ticker_names.append(stock_names.loc[str(equity).split('.')[0]]['name'])
     if i == 0:
         new_df = df['changePercent']
-    elif i != 0 and equity != 'DWDP.csv':
+    else:
         other_df = df['changePercent']
-        new_df = new_df.join(other_df)
+        new_df = pd.concat([new_df,other_df],axis=1,sort=True)
 
-print(new_df,head())
+new_df.columns = ticker_names
 
-correlate = html.Div([
-
-])
+corr_df = new_df.corr()
+correlate = dcc.Graph(
+    figure={
+        'data':[
+            go.Heatmap(
+                z=corr_df,
+                x=corr_df.columns,
+                y=corr_df.index
+            )
+        ],
+        'layout':go.Layout(
+            title='Correlation amongst Dow Jones stocks',
+        )
+    },
+    className='heat-map'
+)
 
 @app.callback(Output('tab-content','children'),
              [Input('tabs','value')]

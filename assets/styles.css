@@ -37,3 +37,7 @@ body, html {
   font-weight: bold;
   width: 500px;
 }
+
+.heat-map {
+  height: 700px;
+}
