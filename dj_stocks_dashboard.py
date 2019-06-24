@@ -3,6 +3,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input,Output
+import dash_auth
 
 # PLOTLY IMPORTS
 import plotly.graph_objs as go
@@ -15,6 +16,8 @@ import os
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__,external_stylesheets=external_stylesheets)
 app.config['suppress_callback_exceptions'] = True
+
+server = app.server
 
 # STOCK DATA INFO
 stock_names = pd.read_excel('dj_stock_names.xlsx')
